@@ -1,0 +1,95 @@
+--------------------------------------------------------------------------------------------------
+---This is the release of source code for the research article------------------------------------
+---"Prediction of protein group function by iterative classification on functional relevance graph" 
+---by Ishita K Khan, Reda Rawi, Halima Bensmail, & Daisuke Kihara, submitted to ISMB'2018---------------------------------
+--------------------------------------------------------------------------------------------------
+
+------------------------
+READme file created by
+---Ishita Khan------
+---01-20-2018---------
+
+
+This source code distribution has two directory:
+I. Data
+II. GFP
+
+I. The Data directory contains input files for the 10 gene groups we studied in the paper. The data is located in Data/Nets/RA/<dataset-name>. Each subdirectory <dataset-name> has the two input files <geneGroupFileName> <networkName> for the corresponding <dataset-name>. 
+
+<geneGroupFileName>: this file contains the uniprot ID of the disease genes/any group of genes. format:: <genename>	<UAC>  #genename is taken from Uniprot.org. Code does not require this, can be any random string.
+
+<networkName>: This file contains graph edge weights for a N * N graph. Each node N is a protein, the set {N} constitutes the interaction network within which the disease genes/ gene group lies. In the paper, we have used SNF(Similarity network fusion) software to integrate protein-protein intersection networks in various forms, and only considered the direct (1 hop) neighborhood of the input gene group.
+
+
+II. The GFP directory contains R and perl codes for the Group Function Prediction Software. Following are details of installation and run steps.
+
+	1. Installation: The software uses R and Perl. Install following required perl and R packages in the current directory
+
+		A. Graph Module in perl:
+		git clone git clone https://github.com/neilb/Graph
+		cd Graph
+		perl Makefile.PL
+		sudo make install
+
+		B. Statistics::R module in perl:
+		wget http://search.cpan.org/CPAN/authors/id/G/GM/GMPASSOS/Statistics-R-0.02.tar.gz
+		tar -xvf Statistics-R-0.02.tar.gz
+		cd Statistics-R-0.02
+		perl Makefile.PL
+		sudo make install
+
+		C. Math:: Random in perl:
+		wget http://search.cpan.org/CPAN/authors/id/G/GR/GROMMEL/Math-Random-0.72.tar.gz
+		tar -xvf Math-Random-0.72.tar.gz
+		cd Math-Random-0.72
+		perl Makefile.PL
+		sudo make install
+
+		C. R packages:
+		R version 3.1.1
+		Install:
+		wget https://cran.r-project.org/src/base/R-3/R-3.1.1.tar.gz
+		tar -xvf R-3.1.1.tar.gz
+		cd R-3.1.1
+		./configure
+		make
+		sudo make install
+
+		library(apcluster): open R terminal and type install.packages("apcluster")
+		library(arm);
+
+	1A. Some Common Errors in installation steps:
+		A. Error related to installing arm packages:
+		nloptr related error:
+		download and compile nloptr from source with following:
+
+		./configure --enable-maintainer-mode --enable-shared
+		make CFLAGS=-fPIC CXXFLAGS=-fPIC
+		sudo make install
+
+		B. ERROR: unknown GUI none from Statistics::R
+		update lib/Statistics/R/Bridge/Linux.pm file inside the download Statistics-R-0.02 by removeing "--gui=none" and then install.
+
+	2. Input data Preparation:
+	The software takes 2 files for input <geneGroupFileName> <networkName>
+	<geneGroupFileName>: this file contains the uniprot ID of the disease genes/any group of genes. format:: <genename>	<UAC>  #genename is taken from Uniprot.org. Code does not require this, can be any random string.
+
+	<networkName>: This file contains graph edge weights for a N * N graph. Each node N is a protein, the set {N} constitutes the interaction network within which the disease genes/ gene group lies. In the paper, we have used SNF(Similarity network fusion) software to integrate protein-protein intersection networks in various forms, and only considered the direct (1 hop) neighborhood of the input gene group.
+
+	With the software we provide input files for the 10 gene groups we studied in the paper. The data is here: GFP/Nets/RA/<dataset-name>. Each subdirectory <dataset-name> has the two input files <geneGroupFileName> <networkName> for the corresponding <dataset-name>.
+
+	3. Run command:
+	perl run_full_pipeleine.pl <geneGroupFileName> <networkName>
+	example: perl run_full_pipeline.pl ../Data/Nets/RA/MAPK/RA_Panoga_MAPK.txt ../Data/Nets/RA/MAPK/RA_SNF_W.txt
+
+	4. Output:
+	Output is created in GFP/enrichment_disease_genes/DiseaseGene_CRF_pred_Enriched_comb.txt file. Its in the following format:
+	<iter0> <comma seperated list of GO terms> 
+	<iter1> <comma seperated list of GO terms>
+	..
+	..
+	<iterLast> <comma seperated list of GO terms>  
+
+	Here <comma seperated list of GO terms> represents the GO terms found by GO enrichment analysis based on the predicted GO annotations of each of the  input genes in the group by the CRF model, which in turn reflects the input gene's GO annotation based on the function of the group/cluster it currently is a member of, at the end of each iteration. The output of the last iteration should be used as the "GFP predicted group function" of the input gene group. 
+
+	5. CleanUp: The software creates multiple intermediate files for each iteration it is run. Please run file_cleanup.pl at the end of a full run to clean up the GFP directory. 
